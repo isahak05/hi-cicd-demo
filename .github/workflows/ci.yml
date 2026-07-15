@@ -1,0 +1,34 @@
+name: Build and Push to Harbor
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  docker:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Login to Harbor
+        run: |
+          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login \
+          ${{ vars.HARBOR_URL }} \
+          --username '${{ secrets.HARBOR_USERNAME }}' \
+          --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+          -t ${{ vars.HARBOR_URL }}/${{ vars.PROJECT }}/${{ vars.IMAGE_NAME }}:latest .
+
+      - name: Push Docker Image
+        run: |
+          docker push \
+          ${{ vars.HARBOR_URL }}/${{ vars.PROJECT }}/${{ vars.IMAGE_NAME }}:latest
