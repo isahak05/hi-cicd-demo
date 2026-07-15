@@ -6,29 +6,40 @@ on:
       - main
 
 jobs:
-
   docker:
 
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE: ${{ vars.HARBOR_URL }}/${{ vars.PROJECT }}/${{ vars.IMAGE_NAME }}
+
     steps:
 
-      - name: Checkout Source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login to Harbor
+      - name: Login Harbor
         run: |
           echo "${{ secrets.HARBOR_PASSWORD }}" | docker login \
           ${{ vars.HARBOR_URL }} \
           --username '${{ secrets.HARBOR_USERNAME }}' \
           --password-stdin
 
-      - name: Build Docker Image
+      - name: Build Image
         run: |
           docker build \
-          -t ${{ vars.HARBOR_URL }}/${{ vars.PROJECT }}/${{ vars.IMAGE_NAME }}:latest .
+            -t $IMAGE:latest \
+            -t $IMAGE:${{ github.sha }} .
 
-      - name: Push Docker Image
+      - name: Push Latest
         run: |
-          docker push \
-          ${{ vars.HARBOR_URL }}/${{ vars.PROJECT }}/${{ vars.IMAGE_NAME }}:latest
+          docker push $IMAGE:latest
+
+      - name: Push Commit SHA
+        run: |
+          docker push $IMAGE:${{ github.sha }}
+
+      - name: Show Image
+        run: |
+          echo "Pushed:"
+          echo "$IMAGE:${{ github.sha }}"
