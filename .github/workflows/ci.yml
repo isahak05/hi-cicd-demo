@@ -10,9 +10,9 @@ jobs:
     runs-on: self-hosted
 
     env:
-      REGISTRY: ${{ secrets.HARBOR_URL }}
-      PROJECT: demo01
-      IMAGE_NAME: hi-cicd-demo
+      REGISTRY: ${{ vars.HARBOR_URL }}
+      PROJECT: ${{ vars.PROJECT }}
+      IMAGE_NAME: ${{ vars.IMAGE_NAME }}
       TAG: ${{ github.sha }}
 
     steps:
@@ -26,9 +26,12 @@ jobs:
           docker version
           docker ps
 
-      - name: Verify Harbor Registry
+      - name: Show Configuration
         run: |
-          echo "Registry: $REGISTRY"
+          echo "Registry : $REGISTRY"
+          echo "Project  : $PROJECT"
+          echo "Image    : $IMAGE_NAME"
+          echo "Tag      : $TAG"
 
       - name: Login to Harbor
         run: |
@@ -47,4 +50,5 @@ jobs:
 
       - name: Logout
         if: always()
-        run: docker logout "$REGISTRY"
+        run: |
+          docker logout "$REGISTRY"
