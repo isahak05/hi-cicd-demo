@@ -10,7 +10,7 @@ jobs:
     runs-on: self-hosted
 
     env:
-      REGISTRY: ${{ secrets.HARBOR_REGISTRY }}
+      REGISTRY: ${{ secrets.HARBOR_URL }}
       PROJECT: demo01
       IMAGE_NAME: hi-cicd-demo
       TAG: ${{ github.sha }}
