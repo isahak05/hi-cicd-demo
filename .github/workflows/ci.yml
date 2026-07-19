@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t test-image:latest .
+          docker build -t test-image222:latest .
 
       - name: Verify Image
         run: |
