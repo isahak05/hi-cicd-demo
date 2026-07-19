@@ -1,4 +1,4 @@
-name: Build Docker Image Test
+name: Build and Push to Harbor
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  docker:
 
     runs-on: self-hosted
 
@@ -15,17 +15,23 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Show Runner Information
+      - name: Login to Harbor
         run: |
-          hostname
-          whoami
-          pwd
-          docker version
+          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login \
+            ${{ secrets.HARBOR_REGISTRY }} \
+            -u "${{ secrets.HARBOR_USERNAME }}" \
+            --password-stdin
 
-      - name: Build Docker Image
+      - name: Build Image
         run: |
-          docker build -t test-image222:latest .
+          docker build \
+            -t ${{ secrets.HARBOR_REGISTRY }}/demo01/hi-cicd-demo:${{ github.sha }} .
 
-      - name: Verify Image
+      - name: Push Image
+        run: |
+          docker push \
+            ${{ secrets.HARBOR_REGISTRY }}/demo01/hi-cicd-demo:${{ github.sha }}
+
+      - name: Show Image
         run: |
           docker images
