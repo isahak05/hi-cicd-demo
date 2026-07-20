@@ -63,6 +63,40 @@ jobs:
           docker push "$REGISTRY/$PROJECT/$IMAGE_NAME:$IMAGE_TAG"
 
       - name: Logout from Harbor
+      # -----------------------------------------------------------------
+      # GITOPS UPDATE SECTION (Modifies your Kustomize manifest repo)
+      # -----------------------------------------------------------------
+      - name: Checkout GitOps Repository
+        uses: actions/checkout@v4
+        with:
+          repository: 'isahak05/hi-cicd-gitops'
+          token: ${{ secrets.GITOPS_PAT }} # Requires a Personal Access Token with repo write access
+          path: gitops-repo
+
+      - name: Update Image Tag in Kustomize
+        run: |
+          cd gitops-repo/apps/hi-cicd-demo
+          
+          # Install kustomize temporarily if it isn't on the self-hosted runner
+          if ! command -v kustomize &> /dev/null; then
+            curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+            KUSTOMIZE_BIN="./kustomize"
+          else
+            KUSTOMIZE_BIN="kustomize"
+          fi
+          
+          # Match the original image name structure and swap it with the new Tag
+          $KUSTOMIZE_BIN edit set image "${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.IMAGE_NAME }}=\
+          ${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+
+      - name: Commit and Push Changes to GitOps Repo
+        run: |
+          cd gitops-repo
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/hi-cicd-demo/kustomization.yaml
+          git commit -m "Bump image tag to ${{ env.IMAGE_TAG }} [skip ci]" || exit 0
+          git push origin main
         if: always()
         run: |
           docker logout harbor100.waltonbd.com:8443
