@@ -1,13 +1,3 @@
-The syntax errors are happening because of a copy-paste mismatch at the very end of your file.
-
-Specifically:
-
-1. **Line 65 (`- name: Logout from Harbor`):** You left this step completely empty without a `run` command because the actual execution block got separated by comments and placed at the absolute bottom of the file.
-2. **Line 101 (`'run' is already defined`):** The `if: always()` and `run:` block for the logout step were accidentally attached to the `Commit and Push` step, causing a duplicate key error.
-
-Here is the fully corrected and clean YAML file. The logout step has been fixed, and I also added the runner image deletion (`docker rmi`) step to match your workflow's name.
-
-```yaml
 name: Build and Push to Harbor after delete image from runner
 
 on:
@@ -119,5 +109,3 @@ jobs:
         if: always()
         run: |
           docker logout harbor100.waltonbd.com:8443
-
-```
